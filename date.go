@@ -100,6 +100,10 @@ func (date Date) Day() int {
 	return time.Time(date).Day()
 }
 
+func (date Date) Format(layout string) string {
+	return time.Time(date).Format(layout)
+}
+
 func (date Date) String() string {
 	return fmt.Sprintf("%d-%02d-%02d", date.Year(), date.Month(), date.Day())
 }
@@ -122,4 +126,3 @@ func ParseDateFromString(dateStr string) (Date, error) {
 	}
 	return date, nil
 }
-
