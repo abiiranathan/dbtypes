@@ -92,8 +92,8 @@ func (date Date) Year() int {
 	return time.Time(date).Year()
 }
 
-func (date Date) Month() time.Month {
-	return time.Time(date).Month()
+func (date Date) Month() int {
+	return int(time.Time(date).Month())
 }
 
 func (date Date) Day() int {
@@ -125,4 +125,8 @@ func ParseDateFromString(dateStr string) (Date, error) {
 		return date, err
 	}
 	return date, nil
+}
+
+func Today() Date {
+	return NewDate(time.Now().Date())
 }
