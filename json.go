@@ -15,6 +15,7 @@ type JSON map[string]interface{}
 func init() {
 	// Register JSON type for gob encoding/decoding
 	gob.Register(JSON{})
+	gob.Register(&Date{})
 }
 
 // Scan scans a value into JSON, implements sql.Scanner interface

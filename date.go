@@ -101,6 +101,9 @@ func (date Date) Day() int {
 }
 
 func (date Date) Format(layout string) string {
+	if date.IsZero() {
+		return ""
+	}
 	return time.Time(date).Format(layout)
 }
 
@@ -129,4 +132,57 @@ func ParseDateFromString(dateStr string) (Date, error) {
 
 func Today() Date {
 	return NewDate(time.Now().Date())
+}
+
+func (date Date) IsZero() bool {
+	return time.Time(date).IsZero()
+}
+
+func (date Date) Equal(other Date) bool {
+	return time.Time(date).Equal(time.Time(other))
+}
+
+func (date Date) Before(other Date) bool {
+	return time.Time(date).Before(time.Time(other))
+}
+
+func (date Date) After(other Date) bool {
+	return time.Time(date).After(time.Time(other))
+}
+
+func (date Date) AddDate(years int, months int, days int) Date {
+	return Date(time.Time(date).AddDate(years, months, days))
+}
+
+func (date Date) AddDays(days int) Date {
+	return date.AddDate(0, 0, days)
+}
+
+func (date Date) AddMonths(months int) Date {
+	return date.AddDate(0, months, 0)
+}
+
+func (date Date) AddYears(years int) Date {
+	return date.AddDate(years, 0, 0)
+}
+
+// Returns the number of days in the month of the date.
+func (date Date) DaysInMonth() int {
+	nextMonth := time.Time(date).AddDate(0, 1, 0)
+	lastDayOfMonth := time.Date(nextMonth.Year(), nextMonth.Month(), 0, 0, 0, 0, 0, nextMonth.Location())
+	return lastDayOfMonth.Day()
+}
+
+func (date Date) DaysInYear() int {
+	year := time.Time(date).Year()
+	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
+		return 366
+	}
+	return 365
+}
+
+// Returns the number of days between the date and the other date.
+// Assumes that the other date is after the date.
+func (date Date) DaysBetween(other Date) int {
+	return int(time.Time(other).Sub(time.Time(date)).Hours() / 24)
 }
