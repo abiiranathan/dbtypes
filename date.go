@@ -88,6 +88,31 @@ func (date *Date) UnmarshalJSON(data []byte) error {
 	return (*time.Time)(date).UnmarshalJSON([]byte(s))
 }
 
+// Implement a FormScanner interface to be parsed from a
+// multipart/form or www-x-urlencoded form.
+// If value is an empty string, no parsing is performed.
+// You should validate the date after parsing the form/json.
+// See https://github.com/abiiranathan/egor.git
+func (date *Date) FormScan(value interface{}) error {
+	dateStr, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("invalid date. Expected value as a string")
+	}
+
+	// Skip empty Date.
+	if dateStr == "" {
+		return nil
+	}
+
+	parsedDate, err := ParseDateFromString(dateStr)
+	if err != nil {
+		return err
+	}
+
+	*date = parsedDate
+	return nil
+}
+
 func (date Date) Year() int {
 	return time.Time(date).Year()
 }
