@@ -6,6 +6,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 )
@@ -14,7 +15,7 @@ type Date time.Time
 
 const layout = "2006-01-02"
 
-func (date *Date) Scan(value interface{}) (err error) {
+func (date *Date) Scan(value any) (err error) {
 	nullTime := &sql.NullTime{}
 	err = nullTime.Scan(value)
 	*date = Date(nullTime.Time)
@@ -104,7 +105,7 @@ func (date *Date) FormScan(value interface{}) error {
 		return nil
 	}
 
-	parsedDate, err := ParseDateFromString(dateStr)
+	parsedDate, err := ParseDate(dateStr)
 	if err != nil {
 		return err
 	}
@@ -125,6 +126,7 @@ func (date Date) Day() int {
 	return time.Time(date).Day()
 }
 
+// Format the date using standard golang time.Format layout.
 func (date Date) Format(layout string) string {
 	if date.IsZero() {
 		return ""
@@ -132,16 +134,24 @@ func (date Date) Format(layout string) string {
 	return time.Time(date).Format(layout)
 }
 
+// String returns a string version of the date using layout 2006-01-02.
 func (date Date) String() string {
 	return fmt.Sprintf("%d-%02d-%02d", date.Year(), date.Month(), date.Day())
 }
 
+// Create a new date object.
 func NewDate(year int, month time.Month, day int) Date {
 	return Date(time.Date(year, month, day, 0, 0, 0, 0, time.Local))
 }
 
-func ParseDateFromString(dateStr string) (Date, error) {
+// Parse date from a string. Returns a new Date object or error
+// if dateStr is empty of has invalid format.
+func ParseDate(dateStr string) (Date, error) {
 	var date Date
+
+	if dateStr == "" {
+		return date, fmt.Errorf("date string is empty")
+	}
 
 	b, err := json.Marshal(dateStr)
 	if err != nil {
@@ -164,15 +174,21 @@ func (date Date) IsZero() bool {
 }
 
 func (date Date) Equal(other Date) bool {
-	return time.Time(date).Equal(time.Time(other))
+	t1 := time.Time(date).Truncate(24 * time.Hour).UTC()
+	t2 := time.Time(other).Truncate(24 * time.Hour).UTC()
+	return t1.Equal(t2)
 }
 
 func (date Date) Before(other Date) bool {
-	return time.Time(date).Before(time.Time(other))
+	t1 := time.Time(date).Truncate(24 * time.Hour).UTC()
+	t2 := time.Time(other).Truncate(24 * time.Hour).UTC()
+	return t1.Before(t2)
 }
 
 func (date Date) After(other Date) bool {
-	return time.Time(date).After(time.Time(other))
+	t1 := time.Time(date).Truncate(24 * time.Hour).UTC()
+	t2 := time.Time(other).Truncate(24 * time.Hour).UTC()
+	return t1.After(t2)
 }
 
 func (date Date) AddDate(years int, months int, days int) Date {
@@ -206,8 +222,14 @@ func (date Date) DaysInYear() int {
 	return 365
 }
 
-// Returns the number of days between the date and the other date.
-// Assumes that the other date is after the date.
-func (date Date) DaysBetween(other Date) int {
-	return int(time.Time(other).Sub(time.Time(date)).Hours() / 24)
+// ToTime converts Date to time.Time
+func (d Date) ToTime() time.Time {
+	return time.Time(d)
+}
+
+// DaysBetween returns the absolute number of days between the date and the other date.
+func (d Date) DaysBetween(other Date) int {
+	start := d.ToTime().Truncate(24 * time.Hour)
+	end := other.ToTime().Truncate(24 * time.Hour)
+	return int(math.Abs(end.Sub(start).Hours() / 24))
 }
