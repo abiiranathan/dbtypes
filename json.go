@@ -8,9 +8,9 @@ import (
 	"fmt"
 )
 
-// JSON implements the database/sql/driver Scanner and Valuer interfaces,
+// JSON implements the database sql.Scanner and driver.Valuer interfaces,
 // as well as gob.GobEncoder and gob.GobDecoder interfaces.
-type JSON map[string]interface{}
+type JSON map[string]any
 
 func init() {
 	// Register JSON type for gob encoding/decoding
@@ -19,7 +19,7 @@ func init() {
 }
 
 // Scan scans a value into JSON, implements sql.Scanner interface
-func (j *JSON) Scan(value interface{}) error {
+func (j *JSON) Scan(value any) error {
 	if err := json.Unmarshal(value.([]byte), &j); err != nil {
 		return err
 	}

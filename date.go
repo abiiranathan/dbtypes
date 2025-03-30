@@ -13,8 +13,10 @@ import (
 
 type Date time.Time
 
-const layout = "2006-01-02"
+// The Standard date layout.
+const DateLayout = "2006-01-02"
 
+// Scan implements the sql.Scanner interface
 func (date *Date) Scan(value any) (err error) {
 	nullTime := &sql.NullTime{}
 	err = nullTime.Scan(value)
@@ -22,6 +24,7 @@ func (date *Date) Scan(value any) (err error) {
 	return
 }
 
+// Value implements the driver.Valuer interface.
 func (date Date) Value() (driver.Value, error) {
 	y, m, d := time.Time(date).Date()
 	return time.Date(y, m, d, 0, 0, 0, 0, time.Time(date).Location()), nil
@@ -32,10 +35,12 @@ func (date Date) GormDataType() string {
 	return "date"
 }
 
+// GobEncode encodes the date with gob encoding.
 func (date Date) GobEncode() ([]byte, error) {
 	return time.Time(date).GobEncode()
 }
 
+// GobDecode decodes bytes in b into a date object.
 func (date *Date) GobDecode(b []byte) error {
 	return (*time.Time)(date).GobDecode(b)
 }
@@ -79,7 +84,7 @@ func (date *Date) UnmarshalJSON(data []byte) error {
 	}
 
 	// Make sure that the user has provided the standard date format
-	_, err := time.Parse(layout, s)
+	_, err := time.Parse(DateLayout, s)
 	if err != nil {
 		return fmt.Errorf("date should be of the format: yyyy-mm-dd")
 	}
@@ -93,8 +98,8 @@ func (date *Date) UnmarshalJSON(data []byte) error {
 // multipart/form or www-x-urlencoded form.
 // If value is an empty string, no parsing is performed.
 // You should validate the date after parsing the form/json.
-// See https://github.com/abiiranathan/egor.git
-func (date *Date) FormScan(value interface{}) error {
+// See https://github.com/abiiranathan/rex.git
+func (date *Date) FormScan(value any) error {
 	dateStr, ok := value.(string)
 	if !ok {
 		return fmt.Errorf("invalid date. Expected value as a string")
@@ -165,32 +170,38 @@ func ParseDate(dateStr string) (Date, error) {
 	return date, nil
 }
 
+// Today returns today's date.
 func Today() Date {
 	return NewDate(time.Now().Date())
 }
 
+// IsZero returns true if the Date is zero.
 func (date Date) IsZero() bool {
 	return time.Time(date).IsZero()
 }
 
+// Equal returns true is the date is equal to other date. The difference in hours is ignored.
 func (date Date) Equal(other Date) bool {
 	t1 := time.Time(date).Truncate(24 * time.Hour).UTC()
 	t2 := time.Time(other).Truncate(24 * time.Hour).UTC()
 	return t1.Equal(t2)
 }
 
+// Before returns true is the date is before other date. The difference in hours is ignored.
 func (date Date) Before(other Date) bool {
 	t1 := time.Time(date).Truncate(24 * time.Hour).UTC()
 	t2 := time.Time(other).Truncate(24 * time.Hour).UTC()
 	return t1.Before(t2)
 }
 
+// After returns true is the date is after other date. The difference in hours is ignored.
 func (date Date) After(other Date) bool {
 	t1 := time.Time(date).Truncate(24 * time.Hour).UTC()
 	t2 := time.Time(other).Truncate(24 * time.Hour).UTC()
 	return t1.After(t2)
 }
 
+// AddDate add years, months and days to the date and returns the new date.
 func (date Date) AddDate(years int, months int, days int) Date {
 	return Date(time.Time(date).AddDate(years, months, days))
 }
@@ -210,7 +221,8 @@ func (date Date) AddYears(years int) Date {
 // Returns the number of days in the month of the date.
 func (date Date) DaysInMonth() int {
 	nextMonth := time.Time(date).AddDate(0, 1, 0)
-	lastDayOfMonth := time.Date(nextMonth.Year(), nextMonth.Month(), 0, 0, 0, 0, 0, nextMonth.Location())
+	lastDayOfMonth := time.Date(nextMonth.Year(),
+		nextMonth.Month(), 0, 0, 0, 0, 0, nextMonth.Location())
 	return lastDayOfMonth.Day()
 }
 
