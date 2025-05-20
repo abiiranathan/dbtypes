@@ -140,7 +140,11 @@ func (date Date) Format(layout string) string {
 }
 
 // String returns a string version of the date using layout 2006-01-02.
+// If date is a zero value, it returns and empty string.
 func (date Date) String() string {
+	if date.IsZero() {
+		return ""
+	}
 	return fmt.Sprintf("%d-%02d-%02d", date.Year(), date.Month(), date.Day())
 }
 
